@@ -32,6 +32,19 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 
+def append_context(user_text, assistant_text):
+    """Append the user and assistant messages to context.txt in the project root."""
+    try:
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        context_path = os.path.join(base_dir, "context.txt")
+        with open(context_path, "a", encoding="utf-8") as f:
+            f.write(f"USER: {user_text}\n")
+            f.write(f"GLADOS: {assistant_text}\n")
+    except OSError as e:
+        logger.error(f"Failed to append to context.txt: {str(e)}")
+
+
+
 def load_system_prompt():
     """Load system prompt from ./data/system_prompt.md or create it from default_promt.md.
 
@@ -284,6 +297,10 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
                     text = json_data['text']
                     logger.info(f"Processing text: {text}")
                     result_text = self.call_groq_api(text)
+                    try:
+                        append_context(text, result_text)
+                    except Exception as e:
+                        logger.error(f"Context append failed: {str(e)}")
 
                     # Always return 200 and plain text
                     self.send_response(200)
