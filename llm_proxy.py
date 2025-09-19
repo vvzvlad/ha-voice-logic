@@ -131,8 +131,8 @@ def get_weather_summary(city_name, api_key):
         if description:
             parts.append(description)
         if isinstance(wind_speed, (int, float)):
-            wind = round(float(wind_speed) * 2) / 2.0
-            parts.append(f"ветер {wind.replace('.0', '')} метров в секунду")
+            wind_raw_str = f"{int(wind_speed)}".replace(".0", "")
+            parts.append(f"ветер {wind_raw_str} метров в секунду")
 
         return ", ".join(parts) if parts else None
     except requests.RequestException as req_err:
