@@ -92,10 +92,10 @@ def register_wildcard_trigger(hass: HomeAssistant, endpoint_url: str) -> Callabl
                     return text
         except asyncio.TimeoutError:
             LOGGER.error("HTTP timeout in sentence callback %s: 30 seconds", endpoint_url)
-            return "Ошибка: превышено время ожидания ответа"
+            return "Ошибка: превышено время ожидания ответа LLM-прокси"
         except aiohttp.ClientError as exc:
             LOGGER.error("HTTP client error in sentence callback %s: %s", endpoint_url, str(exc))
-            return "Ошибка: сбой сети при обращении к сервису"
+            return "Ошибка: сбой сети при обращении к LLM-прокси"
 
     remove = default_agent.register_trigger(sentences=["{question}"], callback=callback)
     return remove
