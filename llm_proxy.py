@@ -121,7 +121,7 @@ GROQ_MODEL = os.getenv("GROQ_MODEL", "openai/gpt-oss-120b")
 GROQ_API_KEY = os.getenv( "GROQ_API_KEY")
 WEATHER_API_KEY = os.getenv( "WEATHER_API_KEY")
 WEATHER_CITY = os.getenv("WEATHER_CITY", "Moscow")
-TTS_URL = os.getenv("TTS_URL")
+SMARTHOME_URL = os.getenv("SMARTHOME_URL")
 
 def extract_command_blocks(text):
     """Return list of inner texts for all <command>...</command> blocks.
@@ -152,12 +152,12 @@ def parse_command_payload(payload_text):
 
 
 def handle_command(command_dict):
-    """post to TTS_URL ignore ssl verification
+    """post to SMARTHOME_URL ignore ssl verification
     """
     try:
         headers = { "Content-Type": "application/json" }
         payload = { "command": command_dict }
-        requests.post(TTS_URL, headers=headers, json=payload, verify=False, timeout=30)
+        requests.post(SMARTHOME_URL, headers=headers, json=payload, verify=False, timeout=5)
 
     except (TypeError, ValueError) as e:
         logger.error(f"Command handler error: {str(e)}")
