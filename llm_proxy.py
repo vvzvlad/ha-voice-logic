@@ -32,37 +32,22 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 
-def normalize_user_text(value):
-    """Return a string suitable for OpenAI-style chat 'content'.
+def extract_request_text(json_data):
+    """Strictly extract request.text (string) from expected schema.
 
-    - If already a string, return as is
-    - If dict, try common keys then fallback to JSON string
-    - If list/tuple, join stringified items with spaces
-    - For primitives, cast to str
-    - For None, return empty string
+    Expected schema:
+    {
+      "request": { "text": str, "source": str? },
+      "device": { "id": str? }?
+    }
     """
-    try:
-        if value is None:
-            return ""
-        if isinstance(value, str):
-            return value
-        if isinstance(value, (int, float, bool)):
-            return str(value)
-        if isinstance(value, dict):
-            for key in ("text", "message", "query", "input"):
-                inner = value.get(key)
-                if isinstance(inner, str):
-                    return inner
-            return json.dumps(value, ensure_ascii=False)
-        if isinstance(value, (list, tuple)):
-            try:
-                return " ".join(str(x) for x in value)
-            except Exception:
-                return json.dumps(value, ensure_ascii=False)
-        return str(value)
-    except Exception as e:
-        logger.error(f"normalize_user_text error for type {type(value).__name__}: {str(e)}")
-        return ""
+    req = json_data.get("request")
+    if not isinstance(req, dict):
+        raise ValueError("Invalid payload: 'request' must be an object")
+    text = req.get("text")
+    if not isinstance(text, str):
+        raise ValueError("Invalid payload: 'request.text' must be a string")
+    return text
 
 def append_context(user_text, assistant_text):
     """Append the user and assistant messages to context.txt in the project root.
@@ -340,11 +325,8 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
                 logger.info(f"Received JSON: {json.dumps(json_data, indent=2, ensure_ascii=False)}")
                 
                 # Extract text field and call Groq API
-                if 'text' in json_data:
-                    raw_text = json_data['text']
-                    text = normalize_user_text(raw_text)
-                    if not isinstance(text, str):
-                        text = str(text)
+                try:
+                    text = extract_request_text(json_data)
                     logger.info(f"Processing text: {text}")
                     result_text = self.call_groq_api(text)
                     try:
@@ -357,8 +339,8 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
                     self.send_header('Content-type', 'text/plain; charset=utf-8')
                     self.end_headers()
                     self.wfile.write(result_text.encode('utf-8'))
-                else:
-                    error_msg = "Missing 'text' field in request"
+                except ValueError as ve:
+                    error_msg = str(ve)
                     logger.error(error_msg)
                     self.send_response(200)
                     self.send_header('Content-type', 'text/plain; charset=utf-8')
