@@ -132,7 +132,8 @@ def build_system_prompt():
     now = datetime.now()
     date_time_text = now.strftime("%Y-%m-%d, %H:%M") #2025-09-18, 14:05
     week_day = now.strftime("%A") #Tuesday
-    prefix = f"Сейчас (дата и время): {date_time_text}, {week_day}.\n"
+    day_time = now.strftime("%p")
+    prefix = f"Сейчас (дата и время): {date_time_text}, {day_time}, {week_day}.\n"
 
     weather_summary = get_weather_summary(WEATHER_CITY, WEATHER_API_KEY)
     if weather_summary is not None:
