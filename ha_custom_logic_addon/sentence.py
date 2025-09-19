@@ -37,15 +37,34 @@ def register_wildcard_trigger(hass: HomeAssistant, endpoint_url: str) -> Callabl
         # Return a no-op remover so unload doesn't crash
         return lambda: None
 
+    def _extract_text(value: Any) -> str:
+        """Return textual content from possible ConversationInput or plain string."""
+        if isinstance(value, str):
+            return value
+        # Try common attributes seen in HA ConversationInput or similar
+        for attr in ("text", "sentence", "utterance", "query", "input"):
+            try:
+                candidate = getattr(value, attr, None)
+            except Exception:
+                candidate = None
+            if isinstance(candidate, str):
+                return candidate
+        # Fallback to string conversion
+        try:
+            return str(value)
+        except Exception:
+            return ""
+
     async def callback(
-        sentence: str,
-        result: Any | None = None,
+        sentence: Any,
+        _result: Any | None = None,
         device_id: str | None = None,
     ) -> str:
         # Strict schema for server: { "request": {"text": str, "source": str}, "device": {"id": str}? }
+        sentence_text = _extract_text(sentence)
         payload: dict[str, Any] = {
             "request": {
-                "text": sentence,
+                "text": sentence_text,
                 "source": "homeassistant.default_agent",
             }
         }
