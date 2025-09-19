@@ -33,15 +33,31 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 def append_context(user_text, assistant_text):
-    """Append the user and assistant messages to context.txt in the project root."""
+    """Append the user and assistant messages to context.txt in the project root.
+
+    If the file's last modification time is older than 60 seconds, clear it first.
+    """
     try:
         base_dir = os.path.dirname(os.path.abspath(__file__))
         context_path = os.path.join(base_dir, "context.txt")
-        with open(context_path, "a", encoding="utf-8") as f:
+
+        # Decide whether to truncate the file based on its age
+        truncate_file = False
+        try:
+            if os.path.exists(context_path):
+                mtime = os.path.getmtime(context_path)
+                age_seconds = datetime.now().timestamp() - mtime
+                if age_seconds > 60: truncate_file = True
+        except OSError:
+            # If we cannot stat the file for any reason, prefer recreating it
+            truncate_file = True
+
+        mode = "w" if truncate_file else "a"
+        with open(context_path, mode, encoding="utf-8") as f:
             f.write(f"USER: {user_text}\n")
             f.write(f"GLADOS: {assistant_text}\n")
     except OSError as e:
-        logger.error(f"Failed to append to context.txt: {str(e)}")
+        logger.error(f"Failed to write to context.txt: {str(e)}")
 
 
 
