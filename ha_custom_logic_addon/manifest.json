@@ -1,0 +1,15 @@
+{
+  "domain": "ha_custom_logic_addon",
+  "name": "HA Custom Logic Addon",
+  "version": "0.1.0",
+  "documentation": "https://github.com/vvzvlad/ha-voice-logic",
+  "issue_tracker": "https://github.com/vvzvlad/ha-voice-logic/issues",
+  "codeowners": ["@vvzvlad"],
+  "requirements": ["voluptuous>=0.13.1"],
+  "after_dependencies": ["conversation"],
+  "dependencies": ["conversation"],
+  "iot_class": "local_push",
+  "config_flow": true
+}
+
+
