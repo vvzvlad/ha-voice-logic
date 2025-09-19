@@ -32,6 +32,38 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 
+def normalize_user_text(value):
+    """Return a string suitable for OpenAI-style chat 'content'.
+
+    - If already a string, return as is
+    - If dict, try common keys then fallback to JSON string
+    - If list/tuple, join stringified items with spaces
+    - For primitives, cast to str
+    - For None, return empty string
+    """
+    try:
+        if value is None:
+            return ""
+        if isinstance(value, str):
+            return value
+        if isinstance(value, (int, float, bool)):
+            return str(value)
+        if isinstance(value, dict):
+            for key in ("text", "message", "query", "input"):
+                inner = value.get(key)
+                if isinstance(inner, str):
+                    return inner
+            return json.dumps(value, ensure_ascii=False)
+        if isinstance(value, (list, tuple)):
+            try:
+                return " ".join(str(x) for x in value)
+            except Exception:
+                return json.dumps(value, ensure_ascii=False)
+        return str(value)
+    except Exception as e:
+        logger.error(f"normalize_user_text error for type {type(value).__name__}: {str(e)}")
+        return ""
+
 def append_context(user_text, assistant_text):
     """Append the user and assistant messages to context.txt in the project root.
 
@@ -309,7 +341,10 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
                 
                 # Extract text field and call Groq API
                 if 'text' in json_data:
-                    text = json_data['text']
+                    raw_text = json_data['text']
+                    text = normalize_user_text(raw_text)
+                    if not isinstance(text, str):
+                        text = str(text)
                     logger.info(f"Processing text: {text}")
                     result_text = self.call_groq_api(text)
                     try:
