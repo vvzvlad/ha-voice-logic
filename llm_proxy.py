@@ -114,8 +114,6 @@ def get_weather_summary(city_name, api_key):
             parts.append(f"{int(round(float(temp)))} градусов")
         if description:
             parts.append(description)
-        if isinstance(humidity, (int, float)):
-            parts.append(f"влажность {int(round(float(humidity)))} процентов")
         if isinstance(wind_speed, (int, float)):
             wind = round(float(wind_speed) * 2) / 2.0
             wind_str = ("%g" % wind).replace(".0", "")
