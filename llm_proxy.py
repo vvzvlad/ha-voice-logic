@@ -37,8 +37,8 @@ def extract_request_text(json_data):
 
     Expected schema:
     {
-      "request": { "text": str, "source": str? },
-      "device": { "id": str? }?
+        "request": { "text": str, "source": str? },
+        "device": { "id": str? }?
     }
     """
     req = json_data.get("request")
@@ -119,7 +119,6 @@ def get_weather_summary(city_name, api_key):
 
         data = response.json()
         temp = data.get("main", {}).get("temp")
-        humidity = data.get("main", {}).get("humidity")
         wind_speed = data.get("wind", {}).get("speed")
         description = None
         weather_list = data.get("weather")
@@ -133,8 +132,7 @@ def get_weather_summary(city_name, api_key):
             parts.append(description)
         if isinstance(wind_speed, (int, float)):
             wind = round(float(wind_speed) * 2) / 2.0
-            wind_str = ("%g" % wind).replace(".0", "")
-            parts.append(f"ветер {wind_str} метров в секунду")
+            parts.append(f"ветер {wind.replace('.0', '')} метров в секунду")
 
         return ", ".join(parts) if parts else None
     except requests.RequestException as req_err:
