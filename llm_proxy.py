@@ -141,7 +141,7 @@ def build_system_prompt():
         prefix += f"Погода в {WEATHER_CITY}: {weather_summary}.\n"
 
     system_prompt = load_system_prompt()
-    system_prompt = system_prompt.replace("<<<<<TDW>>>>>>", prefix)
+    system_prompt = system_prompt.replace("<<<<<TDW>>>>>", prefix)
 
     return system_prompt
 
