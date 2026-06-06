@@ -1,10 +1,17 @@
 FROM python:3.11-slim
 
 WORKDIR /app
-RUN mkdir -p data
+
+# Dependencies first for better layer caching
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-COPY *.py .
-COPY default_promt.md .
 
-CMD ["python", "llm_proxy.py"]
+# Directory for runtime state
+RUN mkdir -p data
+
+# Code and static assets
+COPY src/ src/
+COPY templates/ templates/
+COPY main.py .
+
+CMD ["python", "main.py"]

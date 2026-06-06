@@ -1,0 +1,32 @@
+volumes:
+  ha_voice_logic:
+
+networks:
+  docker_main_net:
+    external: true
+
+services:
+  ha_voice_logic:
+    image: ghcr.io/vvzvlad/ha-voice-logic:latest
+    container_name: ha-voice-logic
+    restart: always
+    volumes:
+      - ha_voice_logic:/app/data
+    environment:
+      GROQ_API_KEY: XXX
+      GROQ_MODEL: openai/gpt-oss-120b
+      GROQ_PROXY: ""
+      WEATHER_API_KEY: XXX
+      WEATHER_CITY: Moscow
+      SMARTHOME_URL: XXX
+      LOG_LEVEL: INFO
+      TZ: Europe/Moscow
+    networks:
+      - docker_main_net
+    logging:
+      driver: "json-file"
+      options:
+        max-file: 5
+        max-size: 10m
+    labels:
+      com.centurylinklabs.watchtower.enable: "true"

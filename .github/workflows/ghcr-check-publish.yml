@@ -7,9 +7,34 @@ on:
   pull_request:
     branches: [ "main" ]
 
+permissions:
+  contents: read
+  packages: write
+
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
+
+    - name: Install dependencies
+      run: pip install -r requirements-dev.txt
+
+    - name: Run tests
+      env:
+        GROQ_API_KEY: test-groq-key
+        WEATHER_API_KEY: test-weather-key
+        SMARTHOME_URL: http://smarthome.test/voice_command
+      run: pytest --tb=short -q
+
   build:
     runs-on: ubuntu-latest
+    needs: test
     steps:
     - uses: actions/checkout@v4
 
@@ -22,7 +47,7 @@ jobs:
 
     - name: Build the Docker image
       run: docker build . --file Dockerfile --tag ghcr.io/${{ github.repository }}:latest --tag ghcr.io/${{ github.repository }}:${{ github.sha }}
-      
+
     - name: Push Docker images
       run: |
         docker push ghcr.io/${{ github.repository }}:latest

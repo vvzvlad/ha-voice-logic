@@ -1,3 +1,4 @@
-requests
-python-dotenv
-PySocks
+requests==2.34.2
+python-dotenv==1.2.2
+PySocks==1.7.1
+pydantic-settings==2.14.1
