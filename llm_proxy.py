@@ -165,6 +165,8 @@ GROQ_API_KEY = os.getenv( "GROQ_API_KEY")
 WEATHER_API_KEY = os.getenv( "WEATHER_API_KEY")
 WEATHER_CITY = os.getenv("WEATHER_CITY", "Moscow")
 SMARTHOME_URL = os.getenv("SMARTHOME_URL")
+# Optional proxy for Groq API only (e.g. "socks5h://10.31.41.70:1080"); empty = direct request
+GROQ_PROXY = os.getenv("GROQ_PROXY", "")
 
 def extract_command_blocks(text):
     """Return list of inner texts for all <command>...</command> blocks.
@@ -264,7 +266,8 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
         }
         
         try:
-            response = requests.post(url, headers=headers, json=payload, verify=False, timeout=300)
+            _proxies = {"https": GROQ_PROXY, "http": GROQ_PROXY} if GROQ_PROXY else None
+            response = requests.post(url, headers=headers, json=payload, verify=False, timeout=300, proxies=_proxies)
             logger.info(f"Groq API response status: {response.status_code}")
             
             if response.status_code == 200:
