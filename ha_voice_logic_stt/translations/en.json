@@ -1,0 +1,16 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "HA Voice Logic STT",
+        "description": "Send captured audio to the ha-voice-logic relay for speech-to-text.",
+        "data": {
+          "base_url": "Base URL"
+        },
+        "data_description": {
+          "base_url": "Base URL of the relay including the /v1 prefix, e.g. http://ha_voice_logic:8081/v1"
+        }
+      }
+    }
+  }
+}
