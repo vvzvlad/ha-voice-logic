@@ -9,11 +9,16 @@ logger = logging.getLogger(__name__)
 OPENWEATHERMAP_URL = "https://api.openweathermap.org/data/2.5/weather"
 
 
-def get_weather_summary(city_name, api_key):
-    """Return short current weather summary via OpenWeatherMap"""
+def get_weather_summary(city_name, api_key, proxy=None):
+    """Return short current weather summary via OpenWeatherMap.
+
+    Optional proxy (SOCKS/HTTP, e.g. "socks5h://host:1080") routes the request;
+    None/empty means a direct request.
+    """
     try:
         params = { "q": city_name, "appid": api_key, "units": "metric", "lang": "ru" }
-        response = requests.get(OPENWEATHERMAP_URL, params=params, verify=False, timeout=8)
+        proxies = {"https": proxy, "http": proxy} if proxy else None
+        response = requests.get(OPENWEATHERMAP_URL, params=params, proxies=proxies, verify=False, timeout=8)
         logger.info( f"OpenWeatherMap response status for city '{city_name}': {response.status_code}" )
         if response.status_code != 200:
             logger.error( f"OpenWeatherMap error for city '{city_name}': {response.status_code} - {response.text}" )

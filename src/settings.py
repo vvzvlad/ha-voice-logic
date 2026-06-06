@@ -17,8 +17,8 @@ class Settings(BaseSettings):
     # STT model for Groq Whisper transcription endpoint (non-secret, has default).
     groq_stt_model: str = "whisper-large-v3-turbo"
     weather_city: str = "Moscow"
-    # Optional proxy for the Groq API only (e.g. "socks5h://10.31.41.70:1080");
-    # empty string means a direct request.
+    # Optional proxy (SOCKS/HTTP, e.g. "socks5h://10.31.41.70:1080") for outbound
+    # calls to external public APIs (Groq and OpenWeatherMap); empty = direct request.
     groq_proxy: str = ""
     log_level: str = "INFO"
     port: int = 8081

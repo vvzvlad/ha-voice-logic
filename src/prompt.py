@@ -44,7 +44,9 @@ def build_system_prompt():
     day_time = now.strftime("%p")
     prefix = f"Сейчас (дата и время): {date_time_text}, {day_time}, {week_day}.\n"
 
-    weather_summary = get_weather_summary(settings.weather_city, settings.weather_api_key)
+    weather_summary = get_weather_summary(
+        settings.weather_city, settings.weather_api_key, settings.groq_proxy
+    )
     if weather_summary is not None:
         prefix += f"Погода в {settings.weather_city}: {weather_summary}.\n"
 
