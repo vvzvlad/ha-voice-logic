@@ -1,0 +1,29 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "HA Custom Logic",
+        "description": "Forward every recognized sentence to an external HTTP endpoint and use its response as the assistant reply.",
+        "data": {
+          "endpoint_url": "Endpoint URL"
+        },
+        "data_description": {
+          "endpoint_url": "Full URL of the LLM proxy, e.g. http://ha_voice_logic:8081"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "HA Custom Logic",
+        "data": {
+          "endpoint_url": "Endpoint URL"
+        },
+        "data_description": {
+          "endpoint_url": "Full URL of the LLM proxy, e.g. http://ha_voice_logic:8081"
+        }
+      }
+    }
+  }
+}

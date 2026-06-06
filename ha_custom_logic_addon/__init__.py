@@ -1,60 +1,49 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
+"""The HA Custom Logic integration.
 
-# flake8: noqa
-# pylint: disable=broad-exception-raised, raise-missing-from, too-many-arguments, redefined-outer-name
-# pylint: disable=multiple-statements, logging-fstring-interpolation, trailing-whitespace, line-too-long
-# pylint: disable=broad-exception-caught, missing-function-docstring, missing-class-docstring
-# pylint: disable=f-string-without-interpolation, import-error
-# pylance: disable=reportMissingImports, reportMissingModuleSource
-# mypy: disable-error-code="import-untyped,call-arg,import-not-found"
-
-"""Home Assistant integration: ha_custom_logic_addon.
-
-Registers a wildcard trigger in the Conversation DefaultAgent and forwards
-recognized sentences to an external HTTP endpoint, returning its response
-as the assistant reply.
+Registers a wildcard sentence trigger on the Conversation default agent and
+forwards every recognized sentence to an external HTTP endpoint, returning the
+endpoint's response as the assistant reply.
 """
 
 from __future__ import annotations
 
-from typing import Any
-
 import logging
 
-from homeassistant.core import HomeAssistant # type: ignore[import-not-found]
-from homeassistant.config_entries import ConfigEntry # type: ignore[import-not-found]
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN, CONF_ENDPOINT_URL, DEFAULT_ENDPOINT_URL
-from .sentence import register_wildcard_trigger
+from .const import CONF_ENDPOINT_URL, DEFAULT_ENDPOINT_URL
+from .sentence import async_register_wildcard_trigger
 
-LOGGER = logging.getLogger(__name__)
-
-
-async def async_setup(_hass: HomeAssistant, _config: dict) -> bool: 
-    """Set up via YAML is not supported; use UI config entries only."""
-    return True
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up the integration from a config entry."""
-    endpoint_url: str = entry.options.get(CONF_ENDPOINT_URL) or entry.data.get(CONF_ENDPOINT_URL) or DEFAULT_ENDPOINT_URL
+    """Set up HA Custom Logic from a config entry."""
+    endpoint_url = entry.options.get(
+        CONF_ENDPOINT_URL,
+        entry.data.get(CONF_ENDPOINT_URL, DEFAULT_ENDPOINT_URL),
+    )
 
-    remove_trigger = register_wildcard_trigger(hass, endpoint_url)
+    # The remover returned by the trigger registration is kept on the entry so
+    # async_unload_entry can detach the trigger cleanly.
+    entry.runtime_data = async_register_wildcard_trigger(hass, endpoint_url)
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {"remove_trigger": remove_trigger}
+    # Reload the entry (re-registering the trigger with the new URL) whenever the
+    # user changes the options.
+    entry.async_on_unload(entry.add_update_listener(_async_reload_entry))
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload a config entry."""
-    store = hass.data.get(DOMAIN, {}).pop(entry.entry_id, None)
-    if store and (remove := store.get("remove_trigger")):
-        try:
-            remove()
-        except RuntimeError as exc:
-            LOGGER.error("Trigger removal failed for entry %s: %s", entry.entry_id, str(exc))
+    """Unload a config entry and remove the registered trigger."""
+    remove_trigger = entry.runtime_data
+    if remove_trigger is not None:
+        remove_trigger()
     return True
 
 
+async def _async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Reload the integration when its options change."""
+    await hass.config_entries.async_reload(entry.entry_id)
