@@ -14,6 +14,8 @@ class Settings(BaseSettings):
 
     # Non-secret configuration — sensible defaults are fine.
     groq_model: str = "openai/gpt-oss-120b"
+    # STT model for Groq Whisper transcription endpoint (non-secret, has default).
+    groq_stt_model: str = "whisper-large-v3-turbo"
     weather_city: str = "Moscow"
     # Optional proxy for the Groq API only (e.g. "socks5h://10.31.41.70:1080");
     # empty string means a direct request.

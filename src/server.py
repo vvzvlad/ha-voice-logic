@@ -10,6 +10,7 @@ import urllib3
 
 from src.settings import settings
 from src.groq_client import call_groq_api
+from src.stt_client import transcribe_audio
 from src.text import extract_request_text
 from src.context import append_context
 
@@ -29,6 +30,13 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
         content_length = int(self.headers.get('Content-Length', 0))
 
         logger.info(f"\n[{timestamp}] POST {self.path}")
+
+        # Route: OpenAI-compatible STT proxy to Groq Whisper.
+        # Match by path suffix so it works regardless of any prefix the
+        # caller prepends (e.g. /v1/audio/transcriptions).
+        if self.path.endswith("/audio/transcriptions"):
+            self._handle_transcription(content_length)
+            return
 
         if content_length > 0:
             try:
@@ -83,6 +91,25 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
             self.send_header('Content-type', 'text/plain; charset=utf-8')
             self.end_headers()
             self.wfile.write(f"Ошибка: {error_msg}".encode('utf-8'))
+
+    def _handle_transcription(self, content_length):
+        """Forward a multipart STT request to Groq Whisper and return its JSON."""
+        try:
+            body = self.rfile.read(content_length) if content_length > 0 else b""
+            content_type = self.headers.get("Content-Type", "")
+            status, payload = transcribe_audio(body, content_type)
+        except (OSError, BrokenPipeError) as e:
+            # Reading the request body failed; degrade gracefully.
+            logger.error(f"STT request read error: {str(e)}")
+            status, payload = 200, b'{"text": ""}'
+
+        self.send_response(status)
+        self.send_header("Content-type", "application/json")
+        self.end_headers()
+        try:
+            self.wfile.write(payload)
+        except BrokenPipeError:
+            pass
 
     def log_message(self, _format, *args):
         """Override to suppress default logging."""
